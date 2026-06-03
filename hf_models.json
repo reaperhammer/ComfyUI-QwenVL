@@ -101,11 +101,11 @@
       }
     },
     "Qwen3-VL-8B-Instruct-NVFP4": {
-      "repo_id": "lhoang8500/Qwen3-VL-8B-Instruct-NVFP4",
+      "repo_id": "JEILDLWLRMA/Qwen3-VL-4B-Instruct-NVFP4",
       "default": false,
       "quantized": true,
       "vram_requirement": {
-        "full": 7.5
+        "full": 4.5
       }
     },
     "Qwen3-VL-8B-Thinking-FP8": {
