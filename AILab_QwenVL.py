@@ -513,6 +513,22 @@ def is_fp8_model(model_name: str) -> bool:
     return any(indicator in model_name for indicator in fp8_indicators)
 
 
+def is_nvfp4_model(model_name: str) -> bool:
+    """Check if model uses NVIDIA FP4 quantization via compressed-tensors.
+
+    Uses the model config cached in HF_ALL_MODELS to avoid triggering downloads.
+    """
+    info = HF_ALL_MODELS.get(model_name, {})
+    if info.get("quantized", False):
+        repo_id = info.get("repo_id", "")
+        config_file = Path(folder_paths.models_dir) / "LLM" / "Qwen-VL" / repo_id.split("/")[-1] / "config.json"
+        if config_file.exists():
+            with open(config_file) as f:
+                cfg = json.load(f)
+            return cfg.get("quant_method") == "compressed-tensors"
+    return False
+
+
 def quantization_config(model_name, quantization):
     """Returns (quant_config, dtype, is_prequantized_fp8).
     
@@ -521,7 +537,7 @@ def quantization_config(model_name, quantization):
     - Don't use flash_attention_2 (only supports fp16/bf16)
     """
     info = HF_ALL_MODELS.get(model_name, {})
-    if info.get("quantized") or is_fp8_model(model_name):
+    if info.get("quantized") or is_fp8_model(model_name) or is_nvfp4_model(model_name):
         # Pre-quantized model (FP8, etc.)
         return None, None, True
     if quantization == Quantization.Q4:
@@ -584,7 +600,7 @@ class QwenVLBase:
         is_prequantized_fp8 = is_fp8_model(model_name) or HF_ALL_MODELS.get(model_name, {}).get("quantized", False)
         
         # Determine if we need to force SDPA (for FP8 or BitsAndBytes models)
-        force_sdpa = is_prequantized_fp8 or is_bnb_quantization
+        force_sdpa = is_prequantized_fp8 or is_bnb_quantization or is_nvfp4_model(model_name)
         
         # Resolve attention mode with force_sdpa flag
         attn_impl = resolve_attention_mode(attention_mode, force_sdpa=force_sdpa)
