@@ -662,12 +662,13 @@ class QwenVLBase:
             # to avoid meta tensor issues
             load_kwargs["device_map"] = None
             load_kwargs["torch_dtype"] = "auto"
-            load_kwargs["quantization_config"] = None  # Override config.json, bypass AutoHfQuantizer
-            
+
+            # Load config separately, strip quantization_config to avoid AutoHfQuantizer
             print(f"[QwenVL] Loading FP8 model to {target_device}...")
-            
-            # Load model on CPU first (without device_map to avoid meta tensors)
-            self.model = AutoModelForVision2Seq.from_pretrained(model_path, **load_kwargs)
+            from transformers import AutoConfig
+            config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+            config.quantization_config = None  # Strip compressed-tensors config
+            self.model = AutoModelForVision2Seq.from_pretrained(config, **load_kwargs)
             
             # Check if model has meta tensors and materialize them
             has_meta = any(param.device.type == "meta" for param in self.model.parameters())
