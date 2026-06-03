@@ -661,7 +661,8 @@ class QwenVLBase:
             # For FP8 models, we need to disable accelerate's device_map and load manually
             # to avoid meta tensor issues
             load_kwargs["device_map"] = None
-            load_kwargs["torch_dtype"] = "auto"  # Let transformers detect FP8 dtype from config
+            load_kwargs["torch_dtype"] = "auto"
+            load_kwargs["quantization_config"] = None  # Override config.json, bypass AutoHfQuantizer
             
             print(f"[QwenVL] Loading FP8 model to {target_device}...")
             
