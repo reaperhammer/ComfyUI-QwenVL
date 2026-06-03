@@ -667,7 +667,9 @@ class QwenVLBase:
             print(f"[QwenVL] Loading FP8 model to {target_device}...")
             from transformers import AutoConfig
             config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
-            config.quantization_config = None  # Strip compressed-tensors config
+            # Remove quantization_config attr to avoid None.to_dict() crash in transformers
+            if hasattr(config, 'quantization_config'):
+                delattr(config, 'quantization_config')
             self.model = AutoModelForVision2Seq.from_pretrained(config, **load_kwargs)
             
             # Check if model has meta tensors and materialize them
