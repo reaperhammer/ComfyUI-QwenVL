@@ -670,7 +670,7 @@ class QwenVLBase:
             # Remove quantization_config attr to avoid None.to_dict() crash in transformers
             if hasattr(config, 'quantization_config'):
                 delattr(config, 'quantization_config')
-            self.model = AutoModelForVision2Seq.from_pretrained(config, **load_kwargs)
+            self.model = AutoModelForVision2Seq.from_pretrained(model_path, config=config, **load_kwargs)
             
             # Check if model has meta tensors and materialize them
             has_meta = any(param.device.type == "meta" for param in self.model.parameters())
